@@ -17,4 +17,7 @@ singletons:
   - com.networknt.balance.RoundRobinLoadBalance
 - com.networknt.cluster.Cluster:
   - com.networknt.cluster.LightCluster
-  
+- com.networknt.server.StartupHookProvider:
+  - io.taiji.faucet.FaucetStartupHook
+- com.networknt.server.ShutdownHookProvider:
+  - io.taiji.faucet.FaucetShutdownHook
