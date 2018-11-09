@@ -37,6 +37,7 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
     static final String WALLET_CANNOT_OPEN = "ERR12292";
     static final String EMPTY_FAUCET_BODY = "ERR12293";
     static final String AMOUNT_EXCEED_MAX = "ERR12294";
+    static final String GENERIC_EXCEPTION = "ERR10014";
 
     static final long maxShell = Converter.toShell(1000, Converter.Unit.TAIJI);
 
@@ -91,6 +92,10 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                         exchange.getResponseSender().send(Config.getInstance().getMapper().writeValueAsString(map));
                     } catch (ApiException e) {
                         setExchangeStatus(exchange, e.getStatus());
+                        return;
+                    } catch (Exception e) {
+                        logger.error("Uncaught error", e);
+                        setExchangeStatus(exchange, GENERIC_EXCEPTION, e.getMessage());
                         return;
                     }
 
