@@ -32,6 +32,8 @@ public class FaucetAddressGetHandler implements LightHttpHandler {
         // otherwise, get it from the chain-reader service but don't put it into the cache as it is used for rate limiting.
         try {
             currencyMap = TaijiClient.getSnapshot(address);
+            // put into the addresses cache, the cache will expire in 24 hours.
+            FaucetStartupHook.addresses.put(address, currencyMap);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(Config.getInstance().getMapper().writeValueAsString(currencyMap));
         } catch (ApiException e) {

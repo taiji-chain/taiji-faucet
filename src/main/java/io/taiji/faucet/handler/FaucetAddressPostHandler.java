@@ -37,7 +37,8 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
     static final String WALLET_CANNOT_OPEN = "ERR12292";
     static final String EMPTY_FAUCET_BODY = "ERR12293";
     static final String AMOUNT_EXCEED_MAX = "ERR12294";
-    static final String GENERIC_EXCEPTION = "ERR10014";
+    static final String OK_200 = "SUC10200";
+
 
     static final long maxShell = Converter.toShell(1000, Converter.Unit.TAIJI);
 
@@ -46,10 +47,9 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         String address = exchange.getQueryParameters().get("address").getFirst();
-        // check if this address has asked for water within the 24 hours. If yes, it should
-        // be in the cache addresses.
-        Map<String, Long> currencyMap = FaucetStartupHook.addresses.getIfPresent(address);
-        if(currencyMap != null) {
+        // check if this address has asked for water within the 24 hours. If yes, it should be in requests cache
+        Boolean b = FaucetStartupHook.requests.getIfPresent(address);
+        if(b != null && b == true) {
             setExchangeStatus(exchange, RATE_LIMIT_REACHED);
             return;
         }
@@ -84,24 +84,11 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                 SignedTransaction stx = TransactionManager.signTransaction(rtx, credentials);
                 Status status = TaijiClient.postTx(config.getAddress().substring(0, 4), stx);
                 if(status != null && status.getStatusCode() == 200) {
-                    // get the snapshot for the target address and put into the cache.
-                    try {
-                        Map<String, Long> map = TaijiClient.getSnapshot(address);
-                        FaucetStartupHook.addresses.put(address, map);
-                        exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-                        exchange.getResponseSender().send(Config.getInstance().getMapper().writeValueAsString(map));
-                    } catch (ApiException e) {
-                        setExchangeStatus(exchange, e.getStatus());
-                        return;
-                    } catch (Exception e) {
-                        logger.error("Uncaught error", e);
-                        setExchangeStatus(exchange, GENERIC_EXCEPTION, e.getMessage());
-                        return;
-                    }
-
+                    // this is to prevent submit the request for the same address within the same day.
+                    FaucetStartupHook.requests.put(address, true);
+                    setExchangeStatus(exchange, OK_200);
                 } else {
                     setExchangeStatus(exchange, status);
-                    return;
                 }
                 break;
             default:
