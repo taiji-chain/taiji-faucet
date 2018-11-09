@@ -2,6 +2,7 @@
 package io.taiji.faucet.handler;
 
 import com.networknt.client.Http2Client;
+import com.networknt.config.Config;
 import com.networknt.exception.ApiException;
 import com.networknt.exception.ClientException;
 import io.undertow.UndertowOptions;
@@ -12,12 +13,15 @@ import io.undertow.util.Headers;
 import io.undertow.util.Methods;
 import org.junit.Assert;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnio.IoUtils;
 import org.xnio.OptionMap;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -35,9 +39,9 @@ public class FaucetAddressPostHandlerTest {
     static final int httpsPort = server.getServerConfig().getHttpsPort();
     static final String url = enableHttp2 || enableHttps ? "https://localhost:" + httpsPort : "http://localhost:" + httpPort;
 
+    @Ignore
     @Test
     public void testFaucetAddressPostHandlerTest() throws ClientException, ApiException {
-        /*
         final Http2Client client = Http2Client.getInstance();
         final CountDownLatch latch = new CountDownLatch(1);
         final ClientConnection connection;
@@ -46,14 +50,17 @@ public class FaucetAddressPostHandlerTest {
         } catch (Exception e) {
             throw new ClientException(e);
         }
+        Map<String, Object> map = new HashMap<>();
+        map.put("currency", "taiji");
+        map.put("unit", "TAIJI");
+        map.put("amount", 1000);
+
         final AtomicReference<ClientResponse> reference = new AtomicReference<>();
         try {
-            ClientRequest request = new ClientRequest().setPath("/faucet/address").setMethod(Methods.POST);
-            
+            ClientRequest request = new ClientRequest().setPath("/faucet/0000aa97723a1e2137b0b965795972f588f18e78").setMethod(Methods.POST);
             request.getRequestHeaders().put(Headers.CONTENT_TYPE, "application/json");
             request.getRequestHeaders().put(Headers.TRANSFER_ENCODING, "chunked");
-            connection.sendRequest(request, client.createClientCallback(reference, latch, "request body to be replaced"));
-            
+            connection.sendRequest(request, client.createClientCallback(reference, latch, Config.getInstance().getMapper().writeValueAsString(map)));
             latch.await();
         } catch (Exception e) {
             logger.error("Exception: ", e);
@@ -65,7 +72,7 @@ public class FaucetAddressPostHandlerTest {
         String body = reference.get().getAttachment(Http2Client.RESPONSE_BODY);
         Assert.assertEquals(200, statusCode);
         Assert.assertNotNull(body);
-        */
+
     }
 }
 
