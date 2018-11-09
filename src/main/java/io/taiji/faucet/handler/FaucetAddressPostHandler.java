@@ -2,27 +2,21 @@ package io.taiji.faucet.handler;
 
 import com.networknt.body.BodyHandler;
 import com.networknt.config.Config;
-import com.networknt.exception.ApiException;
 import com.networknt.handler.LightHttpHandler;
 import com.networknt.status.Status;
 import com.networknt.taiji.client.TaijiClient;
-import com.networknt.taiji.crypto.*;
+import com.networknt.taiji.crypto.LedgerEntry;
+import com.networknt.taiji.crypto.RawTransaction;
+import com.networknt.taiji.crypto.SignedTransaction;
+import com.networknt.taiji.crypto.TransactionManager;
 import com.networknt.taiji.utility.Converter;
-import io.taiji.faucet.FaucetConfig;
 import io.taiji.faucet.FaucetStartupHook;
 import io.taiji.faucet.model.Water;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.Headers;
-import io.undertow.util.HttpString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
-
-import static com.networknt.chain.utility.Console.exitError;
 
 /**
  * populate up to 1000 Taiji coin to a specific address specified.
@@ -34,15 +28,11 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
 
     static final String INVALID_ADDRESS = "ERR12290";
     static final String RATE_LIMIT_REACHED = "ERR12291";
-    static final String WALLET_CANNOT_OPEN = "ERR12292";
     static final String EMPTY_FAUCET_BODY = "ERR12293";
     static final String AMOUNT_EXCEED_MAX = "ERR12294";
     static final String OK_200 = "SUC10200";
 
-
     static final long maxShell = Converter.toShell(1000, Converter.Unit.TAIJI);
-
-    static FaucetConfig config = (FaucetConfig) Config.getInstance().getJsonObjectConfig(FaucetConfig.CONFIG_NAME, FaucetConfig.class);
 
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
@@ -72,17 +62,12 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
             case "0001":
             case "0002":
                 // transfer fund
-                Credentials credentials = getCredentials(config.getPassword(), Config.getInstance().getInputStreamFromFile(config.getAddress() + ".json"));
-                if(credentials == null) {
-                    setExchangeStatus(exchange, WALLET_CANNOT_OPEN);
-                    return;
-                }
                 LedgerEntry ledgerEntry = new LedgerEntry(address, amountInShell);
-                RawTransaction rtx = new RawTransaction(water.getCurrency().toString());
+                RawTransaction rtx = new RawTransaction(water.getCurrency());
                 rtx.addCreditEntry(address, ledgerEntry);
-                rtx.addDebitEntry(config.getAddress(), ledgerEntry);
-                SignedTransaction stx = TransactionManager.signTransaction(rtx, credentials);
-                Status status = TaijiClient.postTx(config.getAddress().substring(0, 4), stx);
+                rtx.addDebitEntry(FaucetStartupHook.config.getAddress(), ledgerEntry);
+                SignedTransaction stx = TransactionManager.signTransaction(rtx, FaucetStartupHook.credentials);
+                Status status = TaijiClient.postTx(FaucetStartupHook.config.getAddress().substring(0, 4), stx);
                 if(status != null && status.getStatusCode() == 200) {
                     // this is to prevent submit the request for the same address within the same day.
                     FaucetStartupHook.requests.put(address, true);
@@ -97,17 +82,4 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                 return;
         }
     }
-
-    private static Credentials getCredentials(String password, InputStream walletStream) {
-        Credentials credentials = null;
-        try {
-            credentials = WalletUtils.loadCredentials(password, walletStream);
-        } catch (CipherException e) {
-            logger.error("Wrong password for wallet file:", e);
-        } catch (IOException e) {
-            logger.error("Unable to load wallet file from the stream:", e);
-        }
-        return credentials;
-    }
-
 }

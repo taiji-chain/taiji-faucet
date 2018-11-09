@@ -6,5 +6,6 @@ public class FaucetShutdownHook implements ShutdownHookProvider {
     @Override
     public void onShutdown() {
         FaucetStartupHook.addresses.cleanUp();
+        FaucetStartupHook.requests.cleanUp();
     }
 }
