@@ -87,10 +87,11 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                     // this is to prevent submit the request for the same address within the same day.
                     FaucetStartupHook.requests.put(address, true);
                     setExchangeStatus(exchange, OK_200);
+                    return;
                 } else {
                     setExchangeStatus(exchange, status);
+                    return;
                 }
-                break;
             default:
                 setExchangeStatus(exchange, INVALID_ADDRESS, homeBank);
                 return;
