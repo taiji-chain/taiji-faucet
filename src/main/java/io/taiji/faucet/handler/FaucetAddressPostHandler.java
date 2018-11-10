@@ -30,7 +30,7 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
     static final String RATE_LIMIT_REACHED = "ERR12291";
     static final String EMPTY_FAUCET_BODY = "ERR12293";
     static final String AMOUNT_EXCEED_MAX = "ERR12294";
-    static final String OK_200 = "SUC10200";
+    static final String SUCCESS_OK = "SUC10200";
 
     static final long maxShell = Converter.toShell(1000, Converter.Unit.TAIJI);
 
@@ -71,7 +71,7 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                 if(status != null && status.getStatusCode() == 200) {
                     // this is to prevent submit the request for the same address within the same day.
                     FaucetStartupHook.requests.put(address, true);
-                    setExchangeStatus(exchange, OK_200);
+                    setExchangeStatus(exchange, SUCCESS_OK);
                     return;
                 } else {
                     setExchangeStatus(exchange, status);

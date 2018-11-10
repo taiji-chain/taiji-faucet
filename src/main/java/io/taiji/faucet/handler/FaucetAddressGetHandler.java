@@ -4,6 +4,7 @@ package io.taiji.faucet.handler;
 import com.networknt.config.Config;
 import com.networknt.exception.ApiException;
 import com.networknt.handler.LightHttpHandler;
+import com.networknt.monad.Result;
 import com.networknt.taiji.client.TaijiClient;
 import io.taiji.faucet.FaucetStartupHook;
 import io.undertow.server.HttpServerExchange;
@@ -30,15 +31,15 @@ public class FaucetAddressGetHandler implements LightHttpHandler {
             return;
         }
         // otherwise, get it from the chain-reader service but don't put it into the cache as it is used for rate limiting.
-        try {
-            currencyMap = TaijiClient.getSnapshot(address);
+        Result<Map<String, Long>> result = TaijiClient.getSnapshot(address);
+        if(result.isSuccess()) {
             // put into the addresses cache, the cache will expire in 24 hours.
+            currencyMap = result.getResult();
             FaucetStartupHook.addresses.put(address, currencyMap);
             exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
             exchange.getResponseSender().send(Config.getInstance().getMapper().writeValueAsString(currencyMap));
-        } catch (ApiException e) {
-            setExchangeStatus(exchange, e.getStatus());
-            return;
+        } else {
+            setExchangeStatus(exchange, result.getError());
         }
     }
 }
