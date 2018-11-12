@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,8 +22,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class FaucetStartupHook implements StartupHookProvider {
     static Logger logger = LoggerFactory.getLogger(FaucetStartupHook.class);
-    // cache the snapshot query result.
-    public static Cache<String, Map<String, Long>> addresses;
     // cache the requests to enforce rate limit.
     public static Cache<String, Boolean> requests;
 
@@ -36,11 +33,6 @@ public class FaucetStartupHook implements StartupHookProvider {
     public void onStartup() {
 
         credentials = getCredentials(config.getPassword(), Config.getInstance().getInputStreamFromFile(config.getAddress() + ".json"));
-
-        // the entry will be kept in cache if it is accessed within 24 hours
-        addresses = Caffeine.newBuilder()
-                .expireAfterAccess(24, TimeUnit.HOURS)
-                .build();
 
         // the entry will be remove after 24 hours since it is written.
         requests = Caffeine.newBuilder()
