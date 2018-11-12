@@ -5,10 +5,7 @@ import com.networknt.config.Config;
 import com.networknt.handler.LightHttpHandler;
 import com.networknt.status.Status;
 import com.networknt.taiji.client.TaijiClient;
-import com.networknt.taiji.crypto.LedgerEntry;
-import com.networknt.taiji.crypto.RawTransaction;
-import com.networknt.taiji.crypto.SignedTransaction;
-import com.networknt.taiji.crypto.TransactionManager;
+import com.networknt.taiji.crypto.*;
 import com.networknt.taiji.utility.Converter;
 import io.taiji.faucet.FaucetStartupHook;
 import io.taiji.faucet.model.Water;
@@ -26,10 +23,12 @@ import java.util.Map;
 public class FaucetAddressPostHandler implements LightHttpHandler {
     static final Logger logger = LoggerFactory.getLogger(FaucetAddressPostHandler.class);
 
-    static final String INVALID_ADDRESS = "ERR12290";
+    static final String INVALID_HOMEBANK = "ERR12290";
     static final String RATE_LIMIT_REACHED = "ERR12291";
     static final String EMPTY_FAUCET_BODY = "ERR12293";
     static final String AMOUNT_EXCEED_MAX = "ERR12294";
+    static final String INVALID_ADDRESS = "ERR12295";
+
     static final String SUCCESS_OK = "SUC10200";
 
     static final long maxShell = Converter.toShell(1000, Converter.Unit.TAIJI);
@@ -37,6 +36,11 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
     @Override
     public void handleRequest(HttpServerExchange exchange) throws Exception {
         String address = exchange.getQueryParameters().get("address").getFirst();
+        // validate the address
+        if(!Keys.validateToAddress(address)) {
+            setExchangeStatus(exchange, INVALID_ADDRESS, address);
+            return;
+        }
         // check if this address has asked for water within the 24 hours. If yes, it should be in requests cache
         Boolean b = FaucetStartupHook.requests.getIfPresent(address);
         if(b != null && b == true) {
@@ -78,7 +82,7 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                     return;
                 }
             default:
-                setExchangeStatus(exchange, INVALID_ADDRESS, homeBank);
+                setExchangeStatus(exchange, INVALID_HOMEBANK, homeBank);
                 return;
         }
     }

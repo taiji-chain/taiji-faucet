@@ -938,7 +938,7 @@ ERR12107:
 ERR12290:
   statusCode: 400
   code: ERR12190
-  message: INVALID_ADDRESS
+  message: INVALID_HOMEBANK
   description: Invalid address. No matching home banck for the first four digits %s
 ERR12291:
   statusCode: 400
@@ -960,6 +960,11 @@ ERR12294:
   code: ERR12194
   message: AMOUNT_EXCEED_MAX
   description: Maximum faucet amount must be less or equal than 1000 Taiji.
+ERR12295:
+  statusCode: 400
+  code: ERR12195
+  message: INVALID_ADDRESS
+  description: Lenght not 40, all digits or wrong checksum for the to address %s.
 
 
 
