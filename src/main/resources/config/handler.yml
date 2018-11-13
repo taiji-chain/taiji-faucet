@@ -47,10 +47,13 @@ handlers:
   # Framework endpoint handlers
   - com.networknt.health.HealthGetHandler@health
   - com.networknt.info.ServerInfoGetHandler@info
+  - com.networknt.specification.SpecDisplayHandler@spec
+  - com.networknt.specification.SpecSwaggerUIHandler@swaggerui
   # - com.networknt.metrics.prometheus.PrometheusGetHandler@getprometheus
   # Business Handlers
   - io.taiji.faucet.handler.FaucetAddressPostHandler
   - io.taiji.faucet.handler.FaucetAddressGetHandler
+  - io.taiji.faucet.handler.FaucetAddressCurrencyGetHandler
 
 
 chains:
@@ -77,6 +80,11 @@ paths:
     exec:
       - default
       - io.taiji.faucet.handler.FaucetAddressGetHandler
+  - path: '/faucet/{address}/{currency}'
+    method: 'GET'
+    exec:
+      - default
+      - io.taiji.faucet.handler.FaucetAddressCurrencyGetHandler
 
   - path: '/health/io.taiji.faucet-1.0.0'
     method: 'get'
@@ -88,3 +96,12 @@ paths:
     exec:
       - info
 
+
+  - path: '/spec.yaml'
+    method: 'get'
+    exec:
+      - spec
+  - path: '/specui.html'
+    method: 'get'
+    exec:
+      - swaggerui

@@ -1,25 +1,27 @@
-# taiji-faucet
-A site that help testers to acquire testing taiji coins on testnet and this is only the API part. There is a single page application what will be deployed with the light-router running on the portal host. 
+# Swagger Light Java Server
 
-To deploy the API to the Kubernetes cluster, login to the sandbox which is the master node of the Kubernetes cluster. Make sure that you have a folder named light-chain and clone the light-kube to the light-chain folder. 
+## Start server
 
-If the directory exists, please sync the folder with `git pull origin master`
-
-If this is the first time to deploy, we need to create the secret by running the command in tiaji-faucet folder. 
+Run with
 
 ```
-./create-secrets.sh
+mvn package exec:exec
+``
+
+## Test
+
+By default, all endpoints are protected by OAuth jwt token verifier. It can be turned off with config change through for development.
+
+
+In order to access the server, there is a long lived token below issued by my
+oauth2 server [light-oauth2](https://github.com/networknt/light-oauth2)
+
+```
+Bearer eyJraWQiOiIxMDAiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJ1cm46Y29tOm5ldHdvcmtudDpvYXV0aDI6djEiLCJhdWQiOiJ1cm46Y29tLm5ldHdvcmtudCIsImV4cCI6MTc5MDAzNTcwOSwianRpIjoiSTJnSmdBSHN6NzJEV2JWdUFMdUU2QSIsImlhdCI6MTQ3NDY3NTcwOSwibmJmIjoxNDc0Njc1NTg5LCJ2ZXJzaW9uIjoiMS4wIiwidXNlcl9pZCI6InN0ZXZlIiwidXNlcl90eXBlIjoiRU1QTE9ZRUUiLCJjbGllbnRfaWQiOiJmN2Q0MjM0OC1jNjQ3LTRlZmItYTUyZC00YzU3ODc0MjFlNzIiLCJzY29wZSI6WyJ3cml0ZTpwZXRzIiwicmVhZDpwZXRzIl19.mue6eh70kGS3Nt2BCYz7ViqwO7lh_4JSFwcHYdJMY6VfgKTHhsIGKq2uEDt3zwT56JFAePwAxENMGUTGvgceVneQzyfQsJeVGbqw55E9IfM_uSM-YcHwTfR7eSLExN4pbqzVDI353sSOvXxA98ZtJlUZKgXNE1Ngun3XFORCRIB_eH8B0FY_nT_D1Dq2WJrR-re-fbR6_va95vwoUdCofLRa4IpDfXXx19ZlAtfiVO44nw6CS8O87eGfAm7rCMZIzkWlCOFWjNHnCeRsh7CVdEH34LF-B48beiG5lM7h4N12-EME8_VDefgMjZ8eqs1ICvJMxdIut58oYbdnkwTjkA
 ```
 
-Once the secret is created, run the following command to start the service.
+Postman is the best tool to test REST APIs
 
-```
-kubectl create -f deployment.yml
-```
+Add "Authorization" header with value as above token and a dummy message will return from the generated stub.
 
-If the taiji-faucet api is updated, then we need to create a new image and upload to the docker hub. 
 
-```
-mvn clean install
-./build.sh 1.0.2
-```
