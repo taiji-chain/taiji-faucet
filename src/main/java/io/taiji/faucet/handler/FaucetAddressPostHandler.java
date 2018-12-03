@@ -3,6 +3,7 @@ package io.taiji.faucet.handler;
 import com.networknt.body.BodyHandler;
 import com.networknt.config.Config;
 import com.networknt.handler.LightHttpHandler;
+import com.networknt.monad.Result;
 import com.networknt.status.Status;
 import com.networknt.taiji.client.TaijiClient;
 import com.networknt.taiji.crypto.*;
@@ -14,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+import static com.networknt.chain.utility.Console.exitError;
 
 /**
  * populate up to 1000 Taiji coin to a specific address specified.
@@ -59,31 +62,53 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
             setExchangeStatus(exchange, AMOUNT_EXCEED_MAX);
             return;
         }
+        // get fee
+        Result<Fee> feeResult = TaijiClient.getFee(FaucetStartupHook.config.getAddress(), water.getCurrency());
+        Fee fee = null;
+        if(feeResult.isSuccess()) {
+            fee = feeResult.getResult();
+        } else {
+            setExchangeStatus(exchange, feeResult.getError());
+            return;
+        }
+
         // verify that the address start with 0000, 0001 and 0002.
         String homeBank = address.substring(0, 4);
+        LedgerEntry feeEntry;
         switch(homeBank) {
             case "0000":
+                feeEntry = new LedgerEntry(fee.getBankAddress(), fee.getInnerChain());
+                break;
             case "0001":
+                feeEntry = new LedgerEntry(fee.getBankAddress(), fee.getInterChain());
+                break;
             case "0002":
-                // transfer fund
-                LedgerEntry ledgerEntry = new LedgerEntry(address, amountInShell);
-                RawTransaction rtx = new RawTransaction(water.getCurrency());
-                rtx.addCreditEntry(address, ledgerEntry);
-                rtx.addDebitEntry(FaucetStartupHook.config.getAddress(), ledgerEntry);
-                SignedTransaction stx = TransactionManager.signTransaction(rtx, FaucetStartupHook.credentials);
-                Status status = TaijiClient.postTx(FaucetStartupHook.config.getAddress().substring(0, 4), stx);
-                if(status != null && status.getStatusCode() == 200) {
-                    // this is to prevent submit the request for the same address within the same day.
-                    FaucetStartupHook.requests.put(address, true);
-                    setExchangeStatus(exchange, SUCCESS_OK);
-                    return;
-                } else {
-                    setExchangeStatus(exchange, status);
-                    return;
-                }
+                feeEntry = new LedgerEntry(fee.getBankAddress(), fee.getInterChain());
+                break;
             default:
                 setExchangeStatus(exchange, INVALID_HOMEBANK, homeBank);
                 return;
+        }
+        // transfer fund
+        LedgerEntry ledgerEntry = new LedgerEntry(address, amountInShell);
+        RawTransaction rtx = new RawTransaction(water.getCurrency());
+        // transaction ledger
+        rtx.addCreditEntry(address, ledgerEntry);
+        rtx.addDebitEntry(FaucetStartupHook.config.getAddress(), ledgerEntry);
+        // fee ledger
+        rtx.addCreditEntry(fee.getBankAddress(), feeEntry);
+        rtx.addDebitEntry(FaucetStartupHook.config.getAddress(), feeEntry);
+        // sign ledgers in the raw transaction
+        SignedTransaction stx = TransactionManager.signTransaction(rtx, FaucetStartupHook.credentials);
+        Status status = TaijiClient.postTx(FaucetStartupHook.config.getAddress().substring(0, 4), stx);
+        if(status != null && status.getStatusCode() == 200) {
+            // this is to prevent submit the request for the same address within the same day.
+            FaucetStartupHook.requests.put(address, true);
+            setExchangeStatus(exchange, SUCCESS_OK);
+            return;
+        } else {
+            setExchangeStatus(exchange, status);
+            return;
         }
     }
 }
