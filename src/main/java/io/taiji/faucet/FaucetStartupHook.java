@@ -7,11 +7,13 @@ import com.networknt.server.StartupHookProvider;
 import com.networknt.taiji.crypto.CipherException;
 import com.networknt.taiji.crypto.Credentials;
 import com.networknt.taiji.crypto.WalletUtils;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Security;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -24,6 +26,12 @@ public class FaucetStartupHook implements StartupHookProvider {
     static Logger logger = LoggerFactory.getLogger(FaucetStartupHook.class);
     // cache the requests to enforce rate limit.
     public static Cache<String, Boolean> requests;
+
+    static {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     public static Credentials credentials;
 
@@ -48,7 +56,7 @@ public class FaucetStartupHook implements StartupHookProvider {
         } catch (CipherException e) {
             logger.error("Wrong password for wallet file:", e);
             throw new RuntimeException("Wrong password for wallet file:", e);
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Unable to load wallet file from the stream:", e);
             throw new RuntimeException("Unable to load wallet file from the stream:", e);
         }

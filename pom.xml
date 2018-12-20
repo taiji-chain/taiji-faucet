@@ -23,6 +23,7 @@
         <version.json-schema-validator>0.1.23</version.json-schema-validator>
         <version.fastscanner>2.18.1</version.fastscanner>
         <version.caffeine>2.6.2</version.caffeine>
+        <version.bouncycastle>1.54</version.bouncycastle>
         <versions.maven-version>2.4</versions.maven-version>
     </properties>
 
@@ -224,9 +225,12 @@
             <artifactId>undertow-core</artifactId>
             <version>${version.undertow}</version>
         </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${version.bouncycastle}</version>
+        </dependency>
 
-        
-        
         <!-- Test Dependencies -->
         <dependency>
             <groupId>junit</groupId>
