@@ -101,8 +101,7 @@ components:
           type: string
           enum: [taiji]
         amount:
-          type: integer
-          format: int32
-        unit: 
+          type: string
+        unit:
           type: string
           enum: [SHELL,KSHELL,MSHELL,TAIJI,KTAIJI]
