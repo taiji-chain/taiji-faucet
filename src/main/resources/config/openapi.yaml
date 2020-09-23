@@ -96,12 +96,14 @@ components:
             'tx.w': create tx
   schemas:
     Water:
+      type: object
       properties:
         currency: 
           type: string
           enum: [taiji]
         amount:
-          type: string
-        unit:
+          type: integer
+          format: int32
+        unit: 
           type: string
           enum: [SHELL,KSHELL,MSHELL,TAIJI,KTAIJI]
