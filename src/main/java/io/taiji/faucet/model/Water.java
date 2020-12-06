@@ -50,4 +50,13 @@ public class Water {
 
         return Objects.hash(amount, currency, unit);
     }
+
+    @Override
+    public String toString() {
+        return "Water{" +
+                "amount=" + amount +
+                ", currency='" + currency + '\'' +
+                ", unit='" + unit + '\'' +
+                '}';
+    }
 }

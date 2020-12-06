@@ -71,7 +71,6 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
             setExchangeStatus(exchange, feeResult.getError());
             return;
         }
-
         // verify that the address start with 0000, 0001 and 0002.
         String homeBank = address.substring(0, 4);
         LedgerEntry feeEntry;
@@ -80,15 +79,15 @@ public class FaucetAddressPostHandler implements LightHttpHandler {
                 feeEntry = new LedgerEntry(fee.getBankAddress(), fee.getInnerChain());
                 break;
             case "0001":
-                feeEntry = new LedgerEntry(fee.getBankAddress(), fee.getInterChain());
-                break;
             case "0002":
+                // the faucet address is in home bank 0000, so here is InterChain fee.
                 feeEntry = new LedgerEntry(fee.getBankAddress(), fee.getInterChain());
                 break;
             default:
                 setExchangeStatus(exchange, INVALID_HOMEBANK, homeBank);
                 return;
         }
+        if(logger.isTraceEnabled()) logger.trace("fee = " + fee + " water = " + water + " feeEntry = " + feeEntry);
         // transfer fund
         LedgerEntry ledgerEntry = new LedgerEntry(address, amountInShell);
         RawTransaction rtx = new RawTransaction(water.getCurrency());
