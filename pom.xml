@@ -22,7 +22,7 @@
         <version.json-schema-validator>2.0.7</version.json-schema-validator>
         <version.caffeine>3.3.0</version.caffeine>
         <version.bouncycastle>1.67</version.bouncycastle>
-        <versions.maven-version>2.4</versions.maven-version>
+        <versions.maven-version>2.22.0</versions.maven-version>
         <version.javadoc-packagelist-plugin>1.0.0</version.javadoc-packagelist-plugin>
         <version.maven-javadoc>3.4.1</version.maven-javadoc>
         <version.maven-jar>3.5.1</version.maven-jar>
